@@ -1,0 +1,18 @@
+---
+title: "What's Your Malfunction?"
+author: "Gentry Miller"
+format: html
+editor: visual
+---
+
+## Question 1
+
+```{r}
+
+```
+
+## Question 2
+
+```{r}
+
+```

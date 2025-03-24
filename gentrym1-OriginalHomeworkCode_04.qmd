@@ -5,10 +5,87 @@ format: html
 editor: visual
 ---
 
+## Preliminaries
+
+```{r}
+#| label: Packages and Data
+
+library(curl)
+library(manipulate)
+library(ggplot2)
+d <- read.csv("https://github.com/fuzzyatelin/fuzzyatelin.github.io/blob/master/AN588_Spring25/KamilarAndCooperData.csv")
+```
+
 ## Question 1
 
 ```{r}
+#| label: Question 1: Z tests
 
+# function Z.prop.test() that takes as parameters:
+
+# p1 and n1, representing the est. proportion and sample size
+# p2 and n2 (default = NULL) representing a second sample's proportion and sample size
+# p0 as expected value for the pop. proportion
+# alternative (default = "two.sided") and conf.level (default = 0.95)
+
+# and returns a list of the test statistic (Z), the p value (P), and the confidence interval (CI) wrt conf.level
+
+Z.prop.test <- function(p1, n1, p2 = NULL, n2 = NULL, p0, alternative = "two.sided", conf.level = 0.95){
+  
+  # normality check
+  is.norm <- function(p, n){
+    if (n * p < 5 || n * (1 - p) < 5) {
+      warning("Distribution may not be normal: np and n(1-p) should both be > 5")
+    }
+  }
+  
+  valid.test <- function(alternative){
+    if(alternative == "two.sided" || alternative == "greater" || alternative == "less"){
+      return(TRUE)
+    } else{
+      return(FALSE)
+    }
+  }
+  
+  if(valid.test(alternative) == FALSE){
+    quit("Invalid test type. Alternative must be set to 'two.sided', 'greater', or 'less'")
+  }
+  
+  # one sample
+  if(is.null(p2) || is.null(n2)){
+    # if p2 or n2 is null there is only one sample to test
+    is.norm(p1, n1)
+    
+    p_hat <- p1
+    SE <- sqrt(p0 * (1-p0) / n1)
+    Z <- (p_hat - p0) / SE
+    CI <- p_hat + c(-1,1) * qnorm(1 - (1 - conf.level) / 2) * SE
+  } 
+  
+  # two samples
+  else {
+    # if neither p2 nor n2 is null there are two samples to test
+    is.norm(p1, n1)
+    is.norm(p2, n2)
+    
+    p_hat1 <- p1
+    p_hat2 <- p2
+    p_hats <- (p_hat1 * n1 + p_hat2 * n2) / (n1 + n2)
+    SE <- sqrt(p_hats * (1 - p_hats) * (1 / n1 + 1 / n2))
+    Z <- (p_hat1 - p_hat2) / SE
+    CI <- (p_hat1 - p_hat2) + c(-1,1) * qnorm(1 - (1 - conf.level) / 2) * SE
+  }
+  
+  if (alternative == "two.sided"){
+    P <- 2 * (1 - pnorm(abs(Z)))
+  } else if (alternative == "greater"){
+    P <-  1 - pnorm(Z)
+  } else if (alternative == "less"){
+    P <- pnorm(z)
+  }
+  
+  return(list(Z = Z, P = P, CI = CI))
+}
 ```
 
 ## Question 2

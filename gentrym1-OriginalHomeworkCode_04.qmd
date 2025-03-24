@@ -39,18 +39,6 @@ Z.prop.test <- function(p1, n1, p2 = NULL, n2 = NULL, p0, alternative = "two.sid
     }
   }
   
-  valid.test <- function(alternative){
-    if(alternative == "two.sided" || alternative == "greater" || alternative == "less"){
-      return(TRUE)
-    } else{
-      return(FALSE)
-    }
-  }
-  
-  if(valid.test(alternative) == FALSE){
-    quit("Invalid test type. Alternative must be set to 'two.sided', 'greater', or 'less'")
-  }
-  
   # one sample
   if(is.null(p2) || is.null(n2)){
     # if p2 or n2 is null there is only one sample to test
@@ -76,12 +64,17 @@ Z.prop.test <- function(p1, n1, p2 = NULL, n2 = NULL, p0, alternative = "two.sid
     CI <- (p_hat1 - p_hat2) + c(-1,1) * qnorm(1 - (1 - conf.level) / 2) * SE
   }
   
+  # calculating p-value
+  # identifies test type and calculates P value using appropriate formula
+  # if invalid test type is passed to "alternative", stop and issue error
   if (alternative == "two.sided"){
     P <- 2 * (1 - pnorm(abs(Z)))
   } else if (alternative == "greater"){
     P <-  1 - pnorm(Z)
   } else if (alternative == "less"){
-    P <- pnorm(z)
+    P <- pnorm(Z)
+  } else{
+    stop("ERROR: Invalid test type. Alternative must be set to 'two.sided', 'greater', or 'less'")
   }
   
   return(list(Z = Z, P = P, CI = CI))
@@ -91,5 +84,7 @@ Z.prop.test <- function(p1, n1, p2 = NULL, n2 = NULL, p0, alternative = "two.sid
 ## Question 2
 
 ```{r}
+#| label: Regression Model
+
 
 ```

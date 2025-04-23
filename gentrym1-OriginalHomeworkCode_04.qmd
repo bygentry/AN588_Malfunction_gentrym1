@@ -187,7 +187,7 @@ confint(log.m, level = .9)[2,]
 -   Using your model, add lines for the 90 percent confidence and prediction interval bands on the plot and add a legend to differentiate between the lines.
 
 ```{r}
-#| label: Confidence and Prediction Lines I
+#| label: Confidence and Prediction Lines I - Calculations
 
 # generate values for the CI lines
 CI <- predict(m, newdata = data.frame(b), 
@@ -212,53 +212,95 @@ log.PI <- predict(log.m, newdata = data.frame(log.b),
                   )
 
 # store in data frame for plotting
-ints <- data.frame(cbind(b, l, CI, PI))
-ints.pivot <- ints %>%
-  pivot_longer(cols = c(fit, lwr, upr,
-                        fit.1, lwr.1, upr.1),
-               names_to = "type",
-               values_to = "vals"
-    )
+ints <- data.frame(cbind(b, l, CI, PI)) %>% 
+  rename(
+    CI.Fit = fit,
+    CI.Lower = lwr,
+    CI.Upper = upr,
+    PI.Fit = fit.1,
+    PI.Lower = lwr.1,
+    PI.Upper = upr.1
+  )
 
-log.ints <- data.frame(cbind(log.b, log.l, log.CI, log.PI))
-log.ints.pivot <- log.ints %>% 
-  pivot_longer(cols = c(fit, lwr, upr,
-                        fit.1, lwr.1, upr.1),
-               names_to = "type",
-               values_to = "vals"
-    )
+log.ints <- data.frame(cbind(log.b, log.l, 
+                             log.CI, log.PI)) %>% 
+  rename(
+    CI.Fit = fit,
+    CI.Lower = lwr,
+    CI.Upper = upr,
+    PI.Fit = fit.1,
+    PI.Lower = lwr.1,
+    PI.Upper = upr.1)
 ```
 
 ```{r}
-#| label: Confidence and Prediction Lines II
+#| label: Confidence and Prediction Lines II - Data Prep
 #| code-fold: true
+
+# This is where I made some bts transformations to my
+# data frame during the plot debugging process 
+
+# pivots the interval columns to inform geom_scatter() 
+# and geom_line() without having to do each line individually
+ints.pivot <- ints %>%
+  pivot_longer(cols = c("CI.Fit", "CI.Lower", "CI.Upper",
+                        "PI.Fit", "PI.Lower", "PI.Upper"),
+               names_to = "type",
+               values_to = "vals") 
+
+log.ints.pivot <- log.ints %>% 
+  pivot_longer(cols = c("CI.Fit", "CI.Lower", "CI.Upper",
+                        "PI.Fit", "PI.Lower", "PI.Upper"),
+               names_to = "type",
+               values_to = "vals") 
+
+# creates a new value interval_group to simplify legend
+ints.pivot <- ints.pivot %>% 
+  mutate(interval_group = case_when(
+    str_detect(type, "Fit") ~ "Fit",
+    str_detect(type, "CI") ~ "CI",
+    str_detect(type, "PI") ~ "PI"
+  ))
+
+log.ints.pivot <- log.ints.pivot %>% 
+  mutate(interval_group = case_when(
+    str_detect(type, "Fit") ~ "Fit",
+    str_detect(type, "CI") ~ "CI",
+    str_detect(type, "PI") ~ "PI"
+  ))
+```
+
+```{r}
+#| label: Confidence and Prediction Lines III - Plotting
+#| code-fold: true
+#| warning: false
 
 p3 <- ggplot(data = ints.pivot, aes(x = b)) +
   geom_point(data = ints, aes(x = b, y = l)) +
-  geom_line(aes(y = vals, color = type)) +
+  geom_line(aes(y = vals, 
+                color = interval_group,
+                group = type)) +
   labs(x = "Mean Brain Size",
        y = "Max Longevity",
        color = "Interval Type") +
   scale_color_manual(values = c("Fit" = "black",
-                                "CI Lower" = "blue3",
-                                "CI Upper" = "blue3",
-                                "PI Lower" = "red3",
-                                "PI Upper" = "red3")) +
+                                "CI" = "blue3",
+                                "PI" = "red3")) +
   ggtitle("(a)") +
   theme_bw() +
   theme(legend.title = element_blank())
 
 p4 <- ggplot(data = log.ints.pivot, aes(x = log.b)) +
   geom_point(data = log.ints, aes(x = log.b, y = log.l)) +
-  geom_line(aes(y = vals, color = type)) +
+  geom_line(aes(y = vals, 
+                color = interval_group, 
+                group = type)) +
   labs(x = "Log Mean Brain Size",
        y = "Log Max Longevity",
        color = "Interval Type") +
   scale_color_manual(values = c("Fit" = "black",
-                                "CI Lower" = "blue3",
-                                "CI Upper" = "blue3",
-                                "PI Lower" = "red3",
-                                "PI Upper" = "red3")) +
+                                "CI" = "blue3",
+                                "PI" = "red3")) +
   ggtitle("(b)") +
   theme_bw() + 
   theme(legend.title = element_blank())

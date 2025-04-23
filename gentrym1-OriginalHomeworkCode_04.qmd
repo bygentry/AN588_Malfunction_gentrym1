@@ -103,7 +103,7 @@ log.b <- log(b)
 m <- lm(data = df, l ~ b)
 m.log <- lm(data = df, log.l ~ log.b)
 
-
+# 
 ```
 
 ### 2.2

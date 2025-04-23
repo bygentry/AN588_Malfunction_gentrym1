@@ -157,6 +157,25 @@ ggarrange(p1, p2, ncol = 2)
 -   Identify and interpret the point estimate of the slope (β1), as well as the outcome of the test associated with the hypotheses H0: β1 = 0; HA: β1 ≠ 0. Also, find a 90 percent CI for the slope (β1) parameter.
 
 ```{r}
+#| label: Beta and t Values
+#| code-fold: true
+
+m.vals <- c(as.numeric(slope),
+            as.numeric(summary(m)$coefficients[2,4]))
+log.m.vals <- c(as.numeric(log.slope),
+                as.numeric(summary(log.m)$coefficients[2,4]))
+
+betas <- data.frame(normal = m.vals,
+                    log = log.m.vals)
+
+rownames(betas) <- c("β1", "Pr(>|t|)"); betas
+```
+
+> The point estimates of the slope ($\beta 1$) are the values that reflect the rate of change of the response variable for each unit increase of the predictor variable, so for every 1 unit increase in brain size the l \~ b model shows an increase in l by 1.22 and for every 1 unit increase in log(brain size) the log model shows a 0.23 increase in log(l)
+
+```{r}
+#| label: Confidence Intervals
+
 CI <- predict(m, newdata = data.frame(b), interval = "confidence", level = 0.9, na.omit = TRUE)
 log.CI <- predict(log.m, newdata = data.frame(log.b), interval = "confidence", level = 0.9, na.omit = TRUE)
 ```

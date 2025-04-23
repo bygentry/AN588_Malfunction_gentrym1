@@ -171,13 +171,15 @@ betas <- data.frame(normal = m.vals,
 rownames(betas) <- c("β1", "Pr(>|t|)"); betas
 ```
 
-> The point estimates of the slope ($\beta 1$) are the values that reflect the rate of change of the response variable for each unit increase of the predictor variable, so for every 1 unit increase in brain size the l \~ b model shows an increase in l by 1.22 and for every 1 unit increase in log(brain size) the log model shows a 0.23 increase in log(l)
+> The point estimates of the slope ($\beta 1$) are the values that reflect the rate of change of the response variable for each unit increase of the predictor variable, so for every 1 unit increase in brain size the l \~ b model shows an increase in l by 1.22 and for every 1 unit increase in log(brain size) the log model shows a 0.23 increase in log(l). Since $\beta 1 \ne 0$ and the p values are well below .05, we reject the null hypothesis and can say that there is a significant relationship.
 
 ```{r}
 #| label: Confidence Intervals
 
-CI <- predict(m, newdata = data.frame(b), interval = "confidence", level = 0.9, na.omit = TRUE)
-log.CI <- predict(log.m, newdata = data.frame(log.b), interval = "confidence", level = 0.9, na.omit = TRUE)
+print("Confidence Intervals for Beta1 - Normal")
+confint(m, level = .9)[2,]
+print("Confidence Intervals for Beta1 - Log")
+confint(log.m, level = .9)[2,]
 ```
 
 ### 2.3
@@ -185,7 +187,84 @@ log.CI <- predict(log.m, newdata = data.frame(log.b), interval = "confidence", l
 -   Using your model, add lines for the 90 percent confidence and prediction interval bands on the plot and add a legend to differentiate between the lines.
 
 ```{r}
+#| label: Confidence and Prediction Lines I
 
+# generate values for the CI lines
+CI <- predict(m, newdata = data.frame(b), 
+              interval = "confidence", 
+              level = 0.9, na.omit = TRUE
+              )
+
+log.CI <- predict(log.m, newdata = data.frame(log.b),
+                  interval = "confidence", 
+                  level = 0.9, na.omit = TRUE
+                  )
+
+# generate values for the PI lines
+PI <- predict(m, newdata = data.frame(b),
+                  interval = "prediction", 
+                  level = 0.9, na.omit = TRUE
+              )
+
+log.PI <- predict(log.m, newdata = data.frame(log.b),
+                  interval = "prediction", 
+                  level = 0.9, na.omit = TRUE
+                  )
+
+# store in data frame for plotting
+ints <- data.frame(cbind(b, l, CI, PI))
+ints.pivot <- ints %>%
+  pivot_longer(cols = c(fit, lwr, upr,
+                        fit.1, lwr.1, upr.1),
+               names_to = "type",
+               values_to = "vals"
+    )
+
+log.ints <- data.frame(cbind(log.b, log.l, log.CI, log.PI))
+log.ints.pivot <- log.ints %>% 
+  pivot_longer(cols = c(fit, lwr, upr,
+                        fit.1, lwr.1, upr.1),
+               names_to = "type",
+               values_to = "vals"
+    )
+```
+
+```{r}
+#| label: Confidence and Prediction Lines II
+#| code-fold: true
+
+p3 <- ggplot(data = ints.pivot, aes(x = b)) +
+  geom_point(data = ints, aes(x = b, y = l)) +
+  geom_line(aes(y = vals, color = type)) +
+  labs(x = "Mean Brain Size",
+       y = "Max Longevity",
+       color = "Interval Type") +
+  scale_color_manual(values = c("Fit" = "black",
+                                "CI Lower" = "blue3",
+                                "CI Upper" = "blue3",
+                                "PI Lower" = "red3",
+                                "PI Upper" = "red3")) +
+  ggtitle("(a)") +
+  theme_bw() +
+  theme(legend.title = element_blank())
+
+p4 <- ggplot(data = log.ints.pivot, aes(x = log.b)) +
+  geom_point(data = log.ints, aes(x = log.b, y = log.l)) +
+  geom_line(aes(y = vals, color = type)) +
+  labs(x = "Log Mean Brain Size",
+       y = "Log Max Longevity",
+       color = "Interval Type") +
+  scale_color_manual(values = c("Fit" = "black",
+                                "CI Lower" = "blue3",
+                                "CI Upper" = "blue3",
+                                "PI Lower" = "red3",
+                                "PI Upper" = "red3")) +
+  ggtitle("(b)") +
+  theme_bw() + 
+  theme(legend.title = element_blank())
+
+ggarrange(p3, p4, ncol = 2,
+          common.legend = TRUE, legend = "bottom")
 ```
 
 ### 2.4

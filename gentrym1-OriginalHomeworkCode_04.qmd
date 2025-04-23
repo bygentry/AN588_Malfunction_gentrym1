@@ -13,6 +13,8 @@ editor: visual
 library(curl)
 library(manipulate)
 library(ggplot2)
+library(ggpubr)
+
 d <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/refs/heads/master/AN588_Spring25/KamilarAndCooperData.csv")
 df <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 ```
@@ -101,9 +103,53 @@ log.b <- log(b)
 
 # create the models
 m <- lm(data = df, l ~ b)
-m.log <- lm(data = df, log.l ~ log.b)
+log.m <- lm(data = df, log.l ~ log.b)
 
-# 
+# get relevant values and generate equations
+int <- coef(m)[1]
+slope <- coef(m)[2]
+log.int <- coef(log.m)[1]
+log.slope <- coef(log.m)[2]
+
+eq <- sprintf("l = %.2f + %.2f * b",
+              int, slope)
+log.eq <- sprintf("log(l) = %.2f + %.2f * log(b)",
+                  log.int, log.slope)
+
+```
+
+```{r}
+#| label: Plotting Regressions
+#| warning: false
+#| code-fold: true
+
+# plot both models
+p1 <- ggplot(df, aes(x = b, y = l)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Mean Brain Size",
+       y = "Max Longevity") +
+  geom_text(aes(x = Inf, y = Inf, label = eq),
+            hjust = 1.4, vjust = 2, 
+            inherit.aes = FALSE,
+            size = 3, color = "red3") +
+  ggtitle("(a)") +
+  theme_bw()
+
+#hjust = 1.1, vjust = 2, 
+p2 <- ggplot(df, aes(x = log.b, y = log.l)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Log Mean Brain Size",
+       y = "Log Max Longevity") +
+  geom_text(aes(x = Inf, y = Inf, label = log.eq),
+            hjust = 1.2, vjust = 2,
+            inherit.aes = FALSE,
+            size = 3, color = "red3") +
+  ggtitle("(b)") +
+  theme_bw()
+
+ggarrange(p1, p2, ncol = 2)
 ```
 
 ### 2.2
@@ -111,7 +157,8 @@ m.log <- lm(data = df, log.l ~ log.b)
 -   Identify and interpret the point estimate of the slope (β1), as well as the outcome of the test associated with the hypotheses H0: β1 = 0; HA: β1 ≠ 0. Also, find a 90 percent CI for the slope (β1) parameter.
 
 ```{r}
-
+CI <- predict(m, newdata = data.frame(b), interval = "confidence", level = 0.9, na.omit = TRUE)
+log.CI <- predict(log.m, newdata = data.frame(log.b), interval = "confidence", level = 0.9, na.omit = TRUE)
 ```
 
 ### 2.3

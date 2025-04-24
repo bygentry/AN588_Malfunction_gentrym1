@@ -355,11 +355,9 @@ ests
 -   Looking at your two models, which do you think is better? Why?
 
 ```{r}
-<<<<<<< HEAD
 #| label: Comparing Models
 #| code-fold: true
-=======
->>>>>>> 0d9c5a6459ad80ac1f9ec1f3340bdb4cbbf945a6
+
 comp
 
 summary(m)

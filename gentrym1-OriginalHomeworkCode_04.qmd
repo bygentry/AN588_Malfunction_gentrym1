@@ -3,6 +3,7 @@ title: "What's Your Malfunction?"
 author: "Gentry Miller"
 format: 
   html:
+    code-overflow: wrap
     theme: minty
     toc: true
     toc-depth: 2
@@ -17,6 +18,7 @@ editor: visual
 
 ```{r}
 #| label: Packages and Data
+#| message: false
 
 library(curl)
 library(manipulate)
@@ -168,6 +170,7 @@ comp
 
 ```{r}
 #| label: Beta and t Values
+#| output: false
 #| code-fold: true
 
 temp1 <- c(as.numeric(slope),
@@ -181,15 +184,32 @@ betas <- data.frame(normal = temp1,
 rownames(betas) <- c("β1", "Pr(>|t|)"); betas
 ```
 
+```         
+               normal          log 
+β1             1.217990e+00    2.341496e-01 
+Pr(>|t|)       2.685909e-20    2.165214e-25
+```
+
 > The point estimates of the slope ($\beta 1$) are the values that reflect the rate of change of the response variable for each unit increase of the predictor variable, so for every 1 unit increase in brain size the l \~ b model shows an increase in l by 1.22 and for every 1 unit increase in log(brain size) the log model shows a 0.23 increase in log(l). Since $\beta 1 \ne 0$ and the p values are well below .05, we reject the null hypothesis and can say that there is a significant relationship.
 
 ```{r}
 #| label: Confidence Intervals
+#| code-fold: true
+#| output: false
 
-print("Confidence Intervals for Beta1 - Normal")
-confint(m, level = .9)[2,]
-print("Confidence Intervals for Beta1 - Log")
-confint(log.m, level = .9)[2,]
+cat(sprintf("m:     5%% %.3f   95%% %.3f\n", 
+            confint(m, level = 0.9)[2, 1], 
+            confint(m, level = 0.9)[2, 2]))
+
+cat(sprintf("log.m: 5%% %.3f   95%% %.3f\n", 
+            confint(log.m, level = 0.9)[2, 1], 
+            confint(log.m, level = 0.9)[2, 2]))
+```
+
+```         
+Confidence Intervals:
+m:     5% 1.036   95% 1.400 
+log.m: 5% 0.205   95% 0.264
 ```
 
 ### 2.3

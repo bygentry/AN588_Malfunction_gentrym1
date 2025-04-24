@@ -1,7 +1,15 @@
 ---
 title: "What's Your Malfunction?"
 author: "Gentry Miller"
-format: html
+format: 
+  html:
+    theme: minty
+    toc: true
+    toc-depth: 2
+    toc-location: left
+    toc-title: Contents
+    df-print: kable
+    style: css
 editor: visual
 ---
 
@@ -12,6 +20,7 @@ editor: visual
 
 library(curl)
 library(manipulate)
+library(tidyverse)
 library(ggplot2)
 library(ggpubr)
 
@@ -22,7 +31,7 @@ df <- read.csv(d, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 ## Question 1
 
 ```{r}
-#| label: Question 1: Z tests
+#| label: Z tests
 
 # function Z.prop.test() that takes as parameters:
 
@@ -124,7 +133,7 @@ log.eq <- sprintf("log(l) = %.2f + %.2f * log(b)",
 #| code-fold: true
 
 # plot both models
-p1 <- ggplot(df, aes(x = b, y = l)) +
+temp1 <- ggplot(df, aes(x = b, y = l)) +
   geom_point() +
   geom_smooth(method = "lm", se = TRUE) +
   labs(x = "Mean Brain Size",
@@ -137,7 +146,7 @@ p1 <- ggplot(df, aes(x = b, y = l)) +
   theme_bw()
 
 #hjust = 1.1, vjust = 2, 
-p2 <- ggplot(df, aes(x = log.b, y = log.l)) +
+temp2 <- ggplot(df, aes(x = log.b, y = log.l)) +
   geom_point() +
   geom_smooth(method = "lm", se = TRUE) +
   labs(x = "Log Mean Brain Size",
@@ -149,7 +158,8 @@ p2 <- ggplot(df, aes(x = log.b, y = log.l)) +
   ggtitle("(b)") +
   theme_bw()
 
-ggarrange(p1, p2, ncol = 2)
+comp <- ggarrange(temp1, temp2, ncol = 2)
+comp
 ```
 
 ### 2.2
@@ -160,13 +170,13 @@ ggarrange(p1, p2, ncol = 2)
 #| label: Beta and t Values
 #| code-fold: true
 
-m.vals <- c(as.numeric(slope),
+temp1 <- c(as.numeric(slope),
             as.numeric(summary(m)$coefficients[2,4]))
-log.m.vals <- c(as.numeric(log.slope),
+temp2 <- c(as.numeric(log.slope),
                 as.numeric(summary(log.m)$coefficients[2,4]))
 
-betas <- data.frame(normal = m.vals,
-                    log = log.m.vals)
+betas <- data.frame(normal = temp1,
+                    log = temp2)
 
 rownames(betas) <- c("β1", "Pr(>|t|)"); betas
 ```
@@ -275,7 +285,7 @@ log.ints.pivot <- log.ints.pivot %>%
 #| code-fold: true
 #| warning: false
 
-p3 <- ggplot(data = ints.pivot, aes(x = b)) +
+temp1 <- ggplot(data = ints.pivot, aes(x = b)) +
   geom_point(data = ints, aes(x = b, y = l)) +
   geom_line(aes(y = vals, 
                 color = interval_group,
@@ -290,7 +300,7 @@ p3 <- ggplot(data = ints.pivot, aes(x = b)) +
   theme_bw() +
   theme(legend.title = element_blank())
 
-p4 <- ggplot(data = log.ints.pivot, aes(x = log.b)) +
+temp2 <- ggplot(data = log.ints.pivot, aes(x = log.b)) +
   geom_point(data = log.ints, aes(x = log.b, y = log.l)) +
   geom_line(aes(y = vals, 
                 color = interval_group, 
@@ -305,7 +315,7 @@ p4 <- ggplot(data = log.ints.pivot, aes(x = log.b)) +
   theme_bw() + 
   theme(legend.title = element_blank())
 
-ggarrange(p3, p4, ncol = 2,
+ggarrange(temp1, temp2, ncol = 2,
           common.legend = TRUE, legend = "bottom")
 ```
 
@@ -314,7 +324,30 @@ ggarrange(p3, p4, ncol = 2,
 -   Produce a point estimate and associated 90 percent PI for the longevity of a species whose brain weight is 800 gm. Do you trust the model to predict observations accurately for this value of the explanatory variable? Why or why not?
 
 ```{r}
+#| label: Making Predictions
+#| warning: false
 
+temp1 <- data.frame(Brain_Size_Species_Mean = 800)
+
+est <- data.frame(predict(m, newdata = temp1,
+                          interval = "prediction",
+                          level = .9))
+
+log.est <- data.frame(predict(log.m, newdata = temp1,
+                              interval = "prediction",
+                              level = .9))
+temp1 <- c(est[1, "fit"], 
+           est[1, "lwr"], 
+           est[1, "upr"])
+
+temp2 <- c(exp(log.est[1, "fit"]), 
+           exp(log.est[1, "lwr"]), 
+           exp(log.est[1, "upr"]))
+
+ests <- data.frame(normal = temp1,
+           log = temp2)
+rownames(ests) <- c("Estimate", "Lower", "Upper")
+ests
 ```
 
 ### 2.4.2
@@ -322,5 +355,12 @@ ggarrange(p3, p4, ncol = 2,
 -   Looking at your two models, which do you think is better? Why?
 
 ```{r}
+#| label: Comparing Models
+#| code-fold: true
+comp
 
+summary(m)
+summary(log.m)
 ```
+
+> Based on the summaries and visualization, I think the log model is better. The log model has higher R^2^ and adjusted R^2^ values and lower p values compared to the non-logged model suggesting a better fit to this data.

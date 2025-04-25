@@ -388,6 +388,7 @@ ests <- data.frame(normal = temp1,
            log = temp2)
 rownames(ests) <- c("Estimate", "Lower", "Upper")
 ests
+
 ```
 #Matteo: I got a pretty different value for the estimate and the confidence interval. Not sure why. 
 
